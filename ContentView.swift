@@ -21,6 +21,8 @@ struct ContentView: View {
     @State private var showThemeInput = false
     @State private var detailedErrorMessage: String = ""
     @State private var currentAppIndex = 0
+    @State private var showSuccess = false
+    @State private var successMessage: String = ""
 
     var body: some View {
         NavigationView {
@@ -47,6 +49,9 @@ struct ContentView: View {
             .navigationTitle("Fun Home Screen")
             .alert(isPresented: $showError) {
                 Alert(title: Text("Error"), message: Text(detailedErrorMessage), dismissButton: .default(Text("OK")))
+            }
+            .alert(isPresented: $showSuccess) {
+                Alert(title: Text("Success"), message: Text(successMessage), dismissButton: .default(Text("OK")))
             }
             .sheet(isPresented: $showThemeInput) {
                 themeInputView
@@ -224,8 +229,8 @@ struct ContentView: View {
         for (_, icon) in generatedIcons {
             UIImageWriteToSavedPhotosAlbum(icon, nil, nil, nil)
         }
-        self.detailedErrorMessage = "Icons saved successfully!"
-        self.showError = true
+        self.successMessage = "Icons saved successfully!"
+        self.showSuccess = true
     }
     
     private func handleError(_ error: OpenAIServiceError) {
@@ -348,3 +353,4 @@ struct ContentView: View {
             ContentView()
         }
     }
+
