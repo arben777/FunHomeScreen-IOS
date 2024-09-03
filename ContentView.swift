@@ -13,29 +13,36 @@ struct ContentView: View {
     @State private var selectedImages: [UIImage] = []
     @State private var theme: String = ""
     @State private var appNames: [String] = []
-    @State private var generatedIcons: [UIImage] = []
+    @State private var generatedIcons: [String: UIImage] = [:]  // Changed to empty dictionary literal
     @State private var isProcessing = false
     @State private var currentStep = 0
     @State private var errorMessage: String?
     @State private var showError = false
     @State private var showThemeInput = false
     @State private var detailedErrorMessage: String = ""
+    @State private var currentAppIndex = 0
 
     var body: some View {
         NavigationView {
-            VStack {
-                switch currentStep {
-                case 0:
-                    welcomeView
-                case 1:
-                    uploadView
-                case 2:
-                    generatedIconsView
-                case 3:
-                    instructionsView
-                default:
-                    Text("Unexpected state")
+            ZStack {
+                Color(.systemBackground).edgesIgnoringSafeArea(.all)
+                
+                VStack(spacing: 20) {
+                    switch currentStep {
+                    case 0:
+                        welcomeView
+                    case 1:
+                        uploadView
+                    case 2:
+                        generatedIconsView
+                    case 3:
+                        instructionsView
+                    default:
+                        Text("Unexpected state")
+                            .font(.headline)
+                    }
                 }
+                .padding()
             }
             .navigationTitle("Fun Home Screen")
             .alert(isPresented: $showError) {
@@ -48,211 +55,177 @@ struct ContentView: View {
     }
     
     var welcomeView: some View {
-        VStack {
+        VStack(spacing: 20) {
+            Image(systemName: "wand.and.stars")
+                .font(.system(size: 60))
+                .foregroundColor(.blue)
+            
             Text("Welcome to Fun Home Screen")
                 .font(.title)
+                .fontWeight(.bold)
+            
             Text("Create unique icons for your iPhone")
                 .font(.subheadline)
-            Button("Get Started") {
-                currentStep = 1
+                .foregroundColor(.secondary)
+            
+            Button(action: {
+                withAnimation {
+                    currentStep = 1
+                }
+            }) {
+                Text("Get Started")
+                    .fontWeight(.semibold)
+                    .frame(minWidth: 200)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
             }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
         }
     }
     
     var uploadView: some View {
-            VStack {
-                Text("Upload Screenshots")
-                    .font(.title2)
-                PhotosPicker(selection: $selectedItems, maxSelectionCount: 5, matching: .images) {
-                    Text("Select Images")
-                }
-                .onChange(of: selectedItems) { _, newItems in
-                    loadTransferable(from: newItems)
-                }
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                if !selectedImages.isEmpty {
-                    Text("\(selectedImages.count) images selected")
-                    Button("Process Images") {
-                        extractAppNames()
-                    }
-                    .padding()
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                }
-                
-                if isProcessing {
-                    ProgressView()
-                        .padding()
-                }
-            }
-        }
-
-    
-    var themeInputView: some View {
-        VStack {
-            Text("Enter Theme")
+        VStack(spacing: 20) {
+            Text("Upload Screenshots")
                 .font(.title2)
-            TextField("e.g., minimalist, retro", text: $theme)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-            Button("Generate Icons") {
-                showThemeInput = false
-                generateIcons()
+                .fontWeight(.semibold)
+            
+            PhotosPicker(selection: $selectedItems, maxSelectionCount: 5, matching: .images) {
+                Label("Select Images", systemImage: "photo.on.rectangle.angled")
             }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
-            .disabled(theme.isEmpty)
+            .onChange(of: selectedItems) { _, newItems in
+                loadTransferable(from: newItems)
+            }
+            .buttonStyle(.borderedProminent)
+            
+            if !selectedImages.isEmpty {
+                Text("\(selectedImages.count) images selected")
+                    .foregroundColor(.secondary)
+                
+                Button(action: {
+                    extractAppNames()
+                }) {
+                    Label("Process Images", systemImage: "arrow.right.circle")
+                        .frame(minWidth: 200)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
+            }
             
             if isProcessing {
                 ProgressView()
-                    .padding()
+                    .scaleEffect(1.5)
             }
         }
-        .padding()
     }
+    
+    var themeInputView: some View {
+            VStack(spacing: 20) {
+                Text("Enter Theme")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                
+                TextField("e.g., minimalist, retro", text: $theme)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
+                
+                Button(action: {
+                    showThemeInput = false
+                    startIconGeneration()
+                }) {
+                    Text("Start Generating Icons")
+                        .fontWeight(.semibold)
+                        .frame(minWidth: 200)
+                        .padding()
+                        .background(theme.isEmpty ? Color.gray : Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .disabled(theme.isEmpty)
+            }
+            .padding()
+        }
     
     var generatedIconsView: some View {
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))]) {
-                    ForEach(Array(zip(appNames, generatedIcons)), id: \.0) { appName, icon in
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 20) {
+                    ForEach(appNames, id: \.self) { appName in
                         VStack {
-                            Image(uiImage: icon)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 80, height: 80)
-                                .cornerRadius(16)
+                            if let icon = generatedIcons[appName] {
+                                Image(uiImage: icon)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 80, height: 80)
+                                    .cornerRadius(16)
+                                    .shadow(radius: 5)
+                            } else {
+                                ProgressView()
+                                    .frame(width: 80, height: 80)
+                            }
                             Text(appName)
                                 .font(.caption)
                                 .lineLimit(1)
                         }
-                        .padding(.bottom, 8)
                     }
                 }
                 .padding()
                 
-                Button("Save Icons") {
-                    saveIcons()
+                if currentAppIndex < appNames.count {
+                    ProgressView("Generating \(appNames[currentAppIndex])")
+                } else {
+                    Button(action: {
+                        saveIcons()
+                    }) {
+                        Text("Save Icons")
+                            .fontWeight(.semibold)
+                            .frame(minWidth: 200)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
                 }
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                Button("Create More Icons") {
-                    showThemeInput = true
-                }
-                .padding()
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                Button("Finish") {
-                    currentStep = 3
-                }
-                .padding()
-                .background(Color.orange)
-                .foregroundColor(.white)
-                .cornerRadius(10)
             }
         }
-    
-    var instructionsView: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("How to Set Custom Icons")
-                    .font(.title2)
-                Text("1. Open the Shortcuts app on your iPhone")
-                Text("2. Tap the + button to create a new shortcut")
-                Text("3. Add the 'Open App' action")
-                Text("4. Choose the app you want to customize")
-                Text("5. Tap the share button and 'Add to Home Screen'")
-                Text("6. Tap the icon next to the shortcut name")
-                Text("7. Choose 'Select Photo' and pick your custom icon")
-                Text("8. Name the shortcut the same as the original app and tap 'Add'")
-            }
-            .padding()
-        }
+
+    private func startIconGeneration() {
+        currentAppIndex = 0
+        generateNextIcon()
     }
-    
-    private func loadTransferable(from items: [PhotosPickerItem]) {
-        selectedImages.removeAll()
+
+    private func generateNextIcon() {
+        guard currentAppIndex < appNames.count else {
+            currentStep = 2
+            return
+        }
         
-        for item in items {
-            item.loadTransferable(type: Data.self) { result in
+        let appName = appNames[currentAppIndex]
+        OpenAIService.shared.generateIcon(for: appName, theme: theme) { result in
+            DispatchQueue.main.async {
                 switch result {
-                case .success(let data):
-                    if let data = data, let image = UIImage(data: data) {
-                        DispatchQueue.main.async {
-                            self.selectedImages.append(image)
-                        }
-                    }
+                case .success(let icon):
+                    self.generatedIcons[appName] = icon
+                    self.currentAppIndex += 1
+                    self.generateNextIcon()
                 case .failure(let error):
-                    print("Error loading image: \(error)")
+                    if case .rateLimitExceeded = error {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 12) {
+                            self.generateNextIcon()
+                        }
+                    } else {
+                        self.handleError(error)
+                    }
                 }
             }
         }
     }
 
-
-    func extractAppNames() {
-        isProcessing = true
-        OpenAIService.shared.extractAppNames(from: selectedImages) { result in
-            DispatchQueue.main.async {
-                self.isProcessing = false
-                switch result {
-                case .success(let names):
-                    self.appNames = names
-                    self.showThemeInput = true
-                case .failure(let error):
-                    switch error {
-                    case .apiError(let message):
-                        if message.contains("Rate limit exceeded") {
-                            self.detailedErrorMessage = "The service is currently busy. Please wait a few minutes and try again."
-                        } else {
-                            self.detailedErrorMessage = "API Error: \(message)"
-                        }
-                    case .networkError(_):
-                        self.detailedErrorMessage = "Network error. Please check your internet connection and try again."
-                    case .noData:
-                        self.detailedErrorMessage = "No data received from the server. Please try again."
-                    case .decodingError(_):
-                        self.detailedErrorMessage = "Error processing the response. Please try again."
-                    case .unknownError:
-                        self.detailedErrorMessage = "An unknown error occurred. Please try again."
-                    case .imageDownloadError:
-                        self.detailedErrorMessage = "Error downloading images. Please try again."
-                    }
-                    self.showError = true
-                }
-            }
+    private func saveIcons() {
+        for (_, icon) in generatedIcons {
+            UIImageWriteToSavedPhotosAlbum(icon, nil, nil, nil)
         }
-    }
-    
-    func generateIcons() {
-        isProcessing = true
-        OpenAIService.shared.generateIcons(appNames: appNames, theme: theme) { result in
-            DispatchQueue.main.async {
-                self.isProcessing = false
-                switch result {
-                case .success(let icons):
-                    self.generatedIcons = icons
-                    self.currentStep = 2
-                case .failure(let error):
-                    self.handleError(error)
-                }
-            }
-        }
+        self.detailedErrorMessage = "Icons saved successfully!"
+        self.showError = true
     }
     
     private func handleError(_ error: OpenAIServiceError) {
@@ -269,21 +242,109 @@ struct ContentView: View {
             detailedErrorMessage = "An unknown error occurred."
         case .imageDownloadError:
             detailedErrorMessage = "Error downloading generated images."
+        case .rateLimitExceeded:
+            detailedErrorMessage = "Rate limit exceeded. Please try again later."
         }
+        print("Error occurred: \(detailedErrorMessage)")
         showError = true
     }
     
-    func saveIcons() {
-        for icon in generatedIcons {
-            UIImageWriteToSavedPhotosAlbum(icon, nil, nil, nil)
+    var instructionsView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 15) {
+                Text("How to Set Custom Icons")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .padding(.bottom)
+                
+                ForEach(instructionSteps, id: \.self) { step in
+                    HStack(alignment: .top) {
+                        Text("•")
+                            .font(.title3)
+                            .foregroundColor(.blue)
+                        Text(step)
+                    }
+                }
+                
+                Button(action: {
+                    withAnimation {
+                        currentStep = 0
+                        selectedItems = []
+                        selectedImages = []
+                        theme = ""
+                        appNames = []
+                        generatedIcons = [:]
+                    }
+                }) {
+                    Label("Start Over", systemImage: "arrow.counterclockwise")
+                        .frame(minWidth: 200)
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.top)
+            }
+            .padding()
         }
-        self.detailedErrorMessage = "Icons saved successfully!"
-        self.showError = true
     }
-}
+    
+    private let instructionSteps = [
+        "Open the Shortcuts app on your iPhone",
+        "Tap the + button to create a new shortcut",
+        "Add the 'Open App' action",
+        "Choose the app you want to customize",
+        "Tap the share button and 'Add to Home Screen'",
+        "Tap the icon next to the shortcut name",
+        "Choose 'Select Photo' and pick your custom icon",
+        "Name the shortcut the same as the original app",
+        "Tap 'Add' to create the custom icon on your home screen"
+    ]
+    
+    private func loadTransferable(from items: [PhotosPickerItem]) {
+            print("Loading transferable items...")
+            selectedImages.removeAll()
+            
+            for (index, item) in items.enumerated() {
+                item.loadTransferable(type: Data.self) { result in
+                    switch result {
+                    case .success(let data):
+                        if let data = data, let image = UIImage(data: data) {
+                            print("Successfully loaded image \(index + 1)")
+                            DispatchQueue.main.async {
+                                self.selectedImages.append(image)
+                            }
+                        } else {
+                            print("Failed to create UIImage from data for item \(index + 1)")
+                        }
+                    case .failure(let error):
+                        print("Error loading image \(index + 1): \(error)")
+                    }
+                }
+            }
+        }
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
+        private func extractAppNames() {
+            print("Starting app name extraction...")
+            isProcessing = true
+            OpenAIService.shared.extractAppNames(from: selectedImages) { result in
+                DispatchQueue.main.async {
+                    self.isProcessing = false
+                    switch result {
+                    case .success(let names):
+                        print("Successfully extracted app names: \(names)")
+                        self.appNames = names
+                        self.showThemeInput = true
+                    case .failure(let error):
+                        print("Failed to extract app names: \(error)")
+                        self.handleError(error)
+                    }
+                }
+            }
+        }
+        
+        // Removed the generateIcons function as it's no longer used
     }
-}
+
+    struct ContentView_Previews: PreviewProvider {
+        static var previews: some View {
+            ContentView()
+        }
+    }
