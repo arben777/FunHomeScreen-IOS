@@ -19,8 +19,19 @@ Fun Home Screen is an iOS application that allows users to create custom app ico
 
 ## Note
 
-This app uses OpenAI's API and includes rate limiting to comply with the basic tier limit of 5 requests per minute. As a result, generating icons may take 5-10 minutes per home screen screenshot. Costs are at ~90 cents per home screen image (30 dalle generations). 
+This app uses OpenAI's API and includes rate limiting to comply with the basic tier limit of 5 requests per minute. As a result, generating icons may take 5-10 minutes per home screen screenshot. Costs are at ~90 cents per home screen image (30 dalle generations). Also I know this is really basic and could be much better, feel free to improve it. It was a quick side challenge I did without caring much for robustness or quality.
 
 ## Setup
 
 To use this app, you need to insert your OpenAI API key in the `APIKeys.swift` file.
+
+## X Posts Related
+
+1. Here is my reply to Damon after the first succesful generation with the theme "minimalist retro" https://x.com/arben777/status/1830899881889931370
+2. Here is this application in action attempting to replicate the viral ai kermit the frog custom icons https://x.com/arben777/status/1830934842781114404
+
+
+
+
+
+
