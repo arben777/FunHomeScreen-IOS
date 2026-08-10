@@ -1,3 +1,5 @@
+
+
 # 🎉 Fun Home Screen 🚀
 
 Welcome to **Fun Home Screen**, the iOS app that lets you revamp your iPhone's look with custom app icons that match your style! Why stick with the same old icons when you can make your home screen pop with creativity?
@@ -15,7 +17,7 @@ Welcome to **Fun Home Screen**, the iOS app that lets you revamp your iPhone's l
 2. **Analyze It:** The app extracts app names from the screenshots using OpenAI's cutting-edge GPT-4 model.
 3. **Theme It:** Choose your desired theme—be it "neon cyberpunk" or "cute pastel animals"—and let the magic happen!
 4. **Create It:** The app uses OpenAI's DALL-E 3 model to design icons that fit your vibe.
-5. **Save It:** Download your cool new icons to your photo library and show off your uniquely styled home screen!
+5. **Save It:** Download your cool new icons to your photo library, then follow the in-app guide to use the **Shortcuts** app to replace your default icons with your custom designs!
 
 ## 🗂️ Project Structure
 
@@ -39,7 +41,3 @@ This app leverages OpenAI’s API and adheres to their rate limits (5 requests p
 
 1. 💬 Check out my reaction after successfully creating a "minimalist retro" theme: [Reply to Damon's Post](https://x.com/arben777/status/1830899881889931370)
 2. 🐸 See the app in action trying to replicate the viral AI Kermit the Frog icons: [Icon Generation Demo Video](https://x.com/arben777/status/1830934842781114404)
-
-
-
-
